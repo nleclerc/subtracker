@@ -1,0 +1,22 @@
+{
+	"appenders": {
+		"console": {
+			"type": "stdout"
+		},
+		"disk": {
+			"type": "dateFile",
+			"filename": "data/logs/output.log",
+			"pattern": "-yyyy-MM-dd"
+		}
+	},
+	"categories": {
+		"default": {
+			"appenders": ["console","disk"],
+			"level": "debug"
+		},
+		"express": {
+			"appenders": ["console","disk"],
+			"level": "info"
+		}
+	}
+}

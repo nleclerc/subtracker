@@ -1,0 +1,6 @@
+{
+	"channel": "lestream",
+	"oauthToken": "",
+	"dbPath": "data/database.sqlite3",
+	"maxAge": 10800000
+}
