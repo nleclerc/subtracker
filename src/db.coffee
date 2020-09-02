@@ -1,6 +1,7 @@
 sqlite3 = require('sqlite3').verbose()
 
 log = require('log4js').getLogger('db')
+debug = require('debug')('subtracker:db')
 
 module.exports = (config)->
 
@@ -9,13 +10,13 @@ module.exports = (config)->
 	db.on 'error', (err)->
 		log.error 'Database error',err
 
-	dbExec = (sql,args...)->
+	dbAll = (sql,args...)->
 		await new Promise (resolve,reject)->
-			db.exec sql,args..., (err)->
+			db.all sql,args..., (err,rows)->
 				if err
 					reject err
 				else
-					resolve()
+					resolve rows
 
 	dbRun = (sql,args...)->
 		await new Promise (resolve,reject)->
@@ -25,7 +26,7 @@ module.exports = (config)->
 				else
 					resolve @
 
-	await dbExec """
+	await dbRun """
 		CREATE TABLE IF NOT EXISTS `sub` (
 			`id` INTEGER PRIMARY KEY AUTOINCREMENT,
 			`creation_date` TEXT NOT NULL,
@@ -39,8 +40,20 @@ module.exports = (config)->
 	"""
 
 	Db =
-		registerSub: (channel,user,type,months)->
-			await dbRun 'INSERT INTO sub (creation_date,channel,user,type,months) VALUES (?,?,?,?,?)',new Date().toISOString(),channel,user,type,months
+		registerSub: (data)->
+			# debug 'Registering sub:',data
+			await dbRun 'INSERT INTO sub (creation_date,channel,user,type,months) VALUES (?,?,?,?,?)',data.creation_date,data.channel,data.user,data.type,data.months
 
 		cleanupSubs: (refDate)->
 			await dbRun 'DELETE FROM sub WHERE creation_date < ?',refDate.toISOString()
+
+		listSubs: (channel,refDate)->
+			args = [channel]
+
+			whereClause = ''
+
+			if refDate?
+				whereClause = 'AND creation_date > ?'
+				args.push refDate
+
+			await dbAll "SELECT * FROM sub WHERE channel=? #{whereClause} ORDER BY creation_date ASC",args...

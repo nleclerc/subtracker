@@ -3,5 +3,7 @@
 	"channel": "lestream",
 	"oauthToken": "",
 	"dbPath": "data/database.sqlite3",
-	"maxAge": 14400000
+	"maxAge": 14400000,
+	"listenAddress": "127.0.0.1",
+	"listenPort": 8347
 }

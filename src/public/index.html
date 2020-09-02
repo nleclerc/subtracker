@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+	<style>
+		html,body.body { /* must use a class since bootstrap sets body bg color. */
+			background-color: #3498DB;
+			padding: 0;
+			margin: 0;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+	</style>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+	<h1>Subtracker</h1>
+
+	<script type="text/javascript">
+		const socket = io();
+		async function emit(message,...args) {
+			return await new Promise((resolve,reject)=>
+				socket.emit(message,...args,(err,result)=> {
+					if (err)
+						reject(err);
+					else
+						resolve(result);
+				})
+			);
+		};
+
+		function addEntry(subEntry){
+			console.log('Adding sub:',subEntry);
+		}
+
+		let lastUpdateTime = null;
+		async function refresh() {
+			console.log('Refreshing data.',lastUpdateTime);
+			let result = await emit('refresh',lastUpdateTime);
+			lastUpdateTime = new Date().toISOString();
+			result.forEach(addEntry);
+		}
+
+		socket.on('connect',()=> {
+			console.log('Connected.');
+			refresh();
+		});
+
+		socket.on('channel',(chan)=> {
+			console.log('Tracking channel:',chan);
+		});
+
+		socket.on('newsub',(subdata)=> {
+			console.log('newsub:',subdata);
+			lastUpdateTime = new Date().toISOString();
+			addEntry(subdata);
+		});
+	</script>
+</body>
+</html>
