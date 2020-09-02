@@ -1,4 +1,5 @@
 {
+	"name": "SubtrackerBot",
 	"channel": "lestream",
 	"oauthToken": "",
 	"dbPath": "data/database.sqlite3",

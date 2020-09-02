@@ -26,7 +26,7 @@ debug 'Using configuration:',config
 				reconnect: true
 				secure: true
 			identity:
-				username: 'subtracker'
+				username: config.name
 				password: config.oauthToken
 			channels: [config.channel]
 
@@ -36,6 +36,7 @@ debug 'Using configuration:',config
 		# 	console.log "[#{chan}]","#{tags['display-name']}:",message
 
 		log.info 'Connected to:',config.channel
+		log.info 'As:',config.name
 
 		client.on 'subscription', (chan,username,methods,message,userstate)->
 			log.info "[#{chan}] SUB(1): #{userstate['display-name']}"#,userstate
