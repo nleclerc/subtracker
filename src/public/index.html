@@ -187,6 +187,11 @@
 			lastUpdateTime = subdata.creation_date;
 			addEntry(subdata);
 		});
+
+		window.addEventListener('focus',()=>{
+			// in case phone sleeps or browser goes into background on mobile.
+			refresh();
+		})
 	</script>
 </body>
 </html>
