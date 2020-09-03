@@ -3,25 +3,121 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
 	<style>
-		html,body.body { /* must use a class since bootstrap sets body bg color. */
-			background-color: #3498DB;
+		html,body {
+			background-color: gray;
 			padding: 0;
 			margin: 0;
+			height: 100%;
 		}
 
-		* {
-			box-sizing: border-box;
+		body {
+			display: flex;
+			flex-direction: column;
+			font-family: sans-serif;
+			overflow: hidden;
+		}
+
+		#header {
+			flex: 0 0 auto;
+			padding: .5rem 1rem;
+
+			display: flex;
+
+			background-color: black;
+			color: white;
+
+			box-shadow: 0 0 .5em rgba(0,0,0,.8);
+			z-index: 1;
+
+			font-size: 1.4em;
+		}
+
+		#header .title {
+			flex: 1 1 auto;
+			font-weight: bold;
+		}
+
+		#header .channelContainer {
+			flex: 1 1 auto;
+			text-align: right;
+			font-weight: lighter;
+		}
+
+		#sublist {
+			flex: 1 1 auto;
+			height: 10px;
+			display: flex;
+			flex-direction: column;
+			overflow-y: auto;
+		}
+
+		.subitem {
+			flex: 0 0 auto;
+			padding: .5rem 1rem;
+			background-color: white;
+			display: flex;
+			overflow: hidden;
+			font-size: 1.3em;
+			align-items: center;
+		}
+
+		.subitem .time {
+			flex: 0 0 auto;
+			margin-right: .5em;
+			color: #888;
+			font-weight: lighter;
+		}
+
+		.subitem .name {
+			flex: 1 1 auto;
+			margin-right: .5em;
+			word-break: break-all;
+		}
+
+		.subitem .months {
+			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: gray;
+			color: white;
+			width: 2em;
+			border-radius: 100%;
+			font-weight: lighter;
+		}
+
+		.subitem+.subitem {
+			border-top: 1px solid lightgray;
 		}
 	</style>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+
+	<template id="subitem">
+		<div class="subitem">
+			<div class="time"></div>
+			<div class="name"></div>
+			<div class="months"></div>
+		</div>
+	</template>
 </head>
 <body>
-	<h1>Subtracker</h1>
+	<div id="header">
+		<div class="title">Subtracker</div>
+		<div class="channelContainer"></div>
+	</div>
+
+	<div id="sublist">
+	</div>
 
 	<script type="text/javascript">
+		const channelContainer = document.querySelector('#header .channelContainer')
+		const sublist = document.querySelector('#sublist');
+		const subitemTemplate = document.querySelector('template#subitem');
+
 		const socket = io();
 		async function emit(message,...args) {
 			return await new Promise((resolve,reject)=>
@@ -34,8 +130,17 @@
 			);
 		};
 
+		function getTime(date) {
+			return moment(date).format('HH:mm');
+		}
+
 		function addEntry(subEntry){
 			console.log('Adding sub:',subEntry);
+			let fragment = subitemTemplate.content.cloneNode(true);
+			fragment.querySelector('.time').textContent = getTime(subEntry.creation_date);
+			fragment.querySelector('.name').textContent = subEntry.user;
+			fragment.querySelector('.months').textContent = subEntry.months;
+			sublist.appendChild(fragment);
 		}
 
 		let lastUpdateTime = null;
@@ -53,6 +158,7 @@
 
 		socket.on('channel',(chan)=> {
 			console.log('Tracking channel:',chan);
+			channelContainer.textContent = chan;
 		});
 
 		socket.on('newsub',(subdata)=> {
