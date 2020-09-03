@@ -134,6 +134,10 @@
 			return moment(date).format('HH:mm');
 		}
 
+		function getIsoDate() {
+			return new Date().toISOString();
+		}
+
 		function addEntry(subEntry){
 			console.log('Adding sub:',subEntry);
 			let fragment = subitemTemplate.content.cloneNode(true);
@@ -147,7 +151,7 @@
 		async function refresh() {
 			console.log('Refreshing data.',lastUpdateTime);
 			let result = await emit('refresh',lastUpdateTime);
-			lastUpdateTime = new Date().toISOString();
+			lastUpdateTime = getIsoDate();
 			result.forEach(addEntry);
 		}
 
@@ -163,7 +167,7 @@
 
 		socket.on('newsub',(subdata)=> {
 			console.log('newsub:',subdata);
-			lastUpdateTime = new Date().toISOString();
+			lastUpdateTime = getIsoDate();
 			addEntry(subdata);
 		});
 	</script>
