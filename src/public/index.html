@@ -45,6 +45,19 @@
 			font-weight: lighter;
 		}
 
+		#header .downloadLink {
+			flex: 0 0 auto;
+			width: 1.8em;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#header .downloadLink img {
+			height: 1em;
+		}
+
 		#sublist {
 			flex: 1 1 auto;
 			height: 10px;
@@ -107,6 +120,7 @@
 	<div id="header">
 		<div class="title">Subtracker</div>&nbsp;
 		<div class="channelContainer"></div>
+		<a class="downloadLink" href="downloadcsv" target="_blank"><img src="download-white.svg"></a>
 	</div>
 
 	<div id="sublist">
