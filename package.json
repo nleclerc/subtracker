@@ -17,11 +17,13 @@
   "license": "GPL-3.0",
   "dependencies": {
     "coffeescript": "^2.5.1",
+    "csv-stringify": "^5.5.1",
     "debug": "^4.1.1",
+    "express": "^4.17.1",
     "lodash": "^4.17.20",
     "log4js": "^6.3.0",
+    "moment": "^2.27.0",
     "node-cron": "^2.0.3",
-    "node-static": "^0.7.11",
     "socket.io": "^2.3.0",
     "sqlite3": "^5.0.0",
     "tmi.js": "^1.5.0"

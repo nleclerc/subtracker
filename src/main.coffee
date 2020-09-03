@@ -5,13 +5,28 @@ config = require './config'
 tmi = require 'tmi.js'
 sqlite3 = require 'sqlite3'
 cron = require 'node-cron'
-Static = require 'node-static'
+Express = require 'express'
 http = require 'http'
 path = require 'path'
+CsvStringify = require 'csv-stringify'
+Moment = require 'moment'
 
 log = require('log4js').getLogger('main')
 log.info 'Subtracker starting...'
 debug 'Using configuration:',config
+
+CSV_HEADERS = [
+	'date'
+	'channel'
+	'username'
+	'type'
+	'months'
+]
+
+CSV_OPTIONS =
+	delimiter: ';'
+
+CSV_DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss'
 
 createSubData = (chan,username,type,months)->
 	creation_date: new Date().toISOString()
@@ -66,13 +81,38 @@ createSubData = (chan,username,type,months)->
 			catch err
 				log.error 'Error handling resub:',err
 
-		fileServerPath = path.join(__dirname,'public')
-		fileServer = new Static.Server fileServerPath
-		debug 'Serving files from:',fileServerPath
+		app = Express()
+		app.set 'trust proxy',true # allows proper access to client visible host including wether connection was secured with ssl.
 
-		server = http.createServer((req,res)->
-			req.addListener('end', -> fileServer.serve req,res).resume()
-		)
+		publicFolderPath = path.join(__dirname,'public')
+		app.set 'public',publicFolderPath
+		app.use Express.static(publicFolderPath)
+		debug 'Serving files from:',publicFolderPath
+
+		app.get '/downloadcsv', (req,res)->
+			debug 'Processing CSV request.'
+			subs = await db.listSubs(config.channel)
+			debug 'Subs found:',subs.length
+
+			csvData = [CSV_HEADERS]
+
+			for sub in subs ? []
+				csvData.push [
+					Moment(sub.creation_date).format CSV_DATE_FORMAT
+					sub.channel
+					sub.user
+					sub.type
+					sub.months
+				]
+
+			stringifier = CsvStringify csvData,CSV_OPTIONS, (err,output)->
+				if err
+					log.error 'Error generating CSV:',err
+					res.status(500).end()
+				else
+					res.attachment("#{Moment().format('YYYY-MM-DD_HH-mm-ss')}-subs_#{config.channel}.csv").send(output).end()
+
+		server = http.createServer(app)
 
 		Socket = require('./socket')(server,db,config.channel)
 
