@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	<title>Subtracker</title>
 
 	<style>
 		html,body {
@@ -127,7 +128,8 @@
 	</div>
 
 	<script type="text/javascript">
-		const channelContainer = document.querySelector('#header .channelContainer')
+		const originalPageTitle = document.title;
+		const channelContainer = document.querySelector('#header .channelContainer');
 		const sublist = document.querySelector('#sublist');
 		const subitemTemplate = document.querySelector('template#subitem');
 
@@ -179,7 +181,9 @@
 
 		socket.on('channel',(chan)=> {
 			console.log('Tracking channel:',chan);
-			channelContainer.textContent = '#'+chan;
+			const hashedChan = `#${chan}`;
+			document.title = originalPageTitle+hashedChan;
+			channelContainer.textContent = hashedChan;
 		});
 
 		socket.on('newsub',(subdata)=> {
