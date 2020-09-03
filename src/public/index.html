@@ -36,13 +36,12 @@
 		}
 
 		#header .title {
-			flex: 1 1 auto;
+			flex: 0 0 auto;
 			font-weight: bold;
 		}
 
 		#header .channelContainer {
 			flex: 1 1 auto;
-			text-align: right;
 			font-weight: lighter;
 		}
 
@@ -106,7 +105,7 @@
 </head>
 <body>
 	<div id="header">
-		<div class="title">Subtracker</div>
+		<div class="title">Subtracker</div>&nbsp;
 		<div class="channelContainer"></div>
 	</div>
 
@@ -134,8 +133,10 @@
 			return moment(date).format('HH:mm');
 		}
 
-		function getIsoDate() {
-			return new Date().toISOString();
+		function last(array) {
+			if (Array.isArray(array) && array.length > 0)
+				return array[array.length-1];
+			return null;
 		}
 
 		function addEntry(subEntry){
@@ -151,7 +152,9 @@
 		async function refresh() {
 			console.log('Refreshing data.',lastUpdateTime);
 			let result = await emit('refresh',lastUpdateTime);
-			lastUpdateTime = getIsoDate();
+			let lastItem = last(result);
+			if (lastItem)
+				lastUpdateTime = lastItem.creation_date;
 			result.forEach(addEntry);
 		}
 
@@ -162,12 +165,12 @@
 
 		socket.on('channel',(chan)=> {
 			console.log('Tracking channel:',chan);
-			channelContainer.textContent = chan;
+			channelContainer.textContent = '#'+chan;
 		});
 
 		socket.on('newsub',(subdata)=> {
 			console.log('newsub:',subdata);
-			lastUpdateTime = getIsoDate();
+			lastUpdateTime = subdata.creation_date;
 			addEntry(subdata);
 		});
 	</script>
