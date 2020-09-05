@@ -81,6 +81,15 @@ createSubData = (chan,username,type,months)->
 			catch err
 				log.error 'Error handling resub:',err
 
+		client.on 'subgift', (chan,username,streakMonths,recipient,methods,userstate)->
+			try
+				debug "[#{chan}] GIFTED: #{recipient}"
+				subData = createSubData chan,recipient,'gifted',1 # we can't know the actual months.
+				await db.registerSub subData
+				Socket.notifyNewSub subData
+			catch err
+				log.error 'Error handling resub:',err
+
 		app = Express()
 		app.set 'trust proxy',true # allows proper access to client visible host including wether connection was secured with ssl.
 
