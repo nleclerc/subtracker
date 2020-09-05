@@ -32,7 +32,7 @@ module.exports = (server,db,channelName)->
 					callback err
 
 		registerService 'refresh', (refDate,callback)->
-			log.info 'Refreshing since:',refDate
+			debug 'Refreshing since:',refDate
 			result = await db.listSubs channelName,refDate
 			# debug 'Found rows:',result
 			result

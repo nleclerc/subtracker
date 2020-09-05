@@ -65,7 +65,7 @@ createSubData = (chan,username,type,months)->
 
 		client.on 'subscription', (chan,username,methods,message,userstate)->
 			try
-				log.info "[#{chan}] SUB(1): #{userstate['display-name']}"#,userstate
+				debug "[#{chan}] SUB(1): #{userstate['display-name']}"#,userstate
 				subData = createSubData chan,username,'sub',1
 				await db.registerSub subData
 				Socket.notifyNewSub subData
@@ -74,7 +74,7 @@ createSubData = (chan,username,type,months)->
 
 		client.on 'resub', (chan,username,months,message,userstate,methods)->
 			try
-				log.info "[#{chan}] RESUB(#{userstate['msg-param-cumulative-months']}): #{userstate['display-name']}"#,userstate
+				debug "[#{chan}] RESUB(#{userstate['msg-param-cumulative-months']}): #{userstate['display-name']}"#,userstate
 				subData = createSubData chan,username,'resub',userstate['msg-param-cumulative-months']
 				await db.registerSub subData
 				Socket.notifyNewSub subData
