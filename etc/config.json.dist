@@ -1,6 +1,6 @@
 {
 	"name": "SubtrackerBot",
-	"channel": "lestream",
+	"channel": ["lestream"],
 	"oauthToken": "",
 	"dbPath": "data/database.sqlite3",
 	"maxAge": 14400000,

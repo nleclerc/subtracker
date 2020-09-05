@@ -53,7 +53,7 @@ createSubData = (chan,username,type,months)->
 			identity:
 				username: config.name
 				password: config.oauthToken
-			channels: [config.channel]
+			channels: config.channel
 
 		await client.connect()
 		# client.on 'message', (chan,tags,message,self)->
