@@ -105,6 +105,15 @@
 		.subitem+.subitem {
 			border-top: 1px solid lightgray;
 		}
+
+		button.channel {
+			cursor: pointer;
+			margin: 0 auto;
+			margin-top: 1em;
+			font-size: 1.3em;
+			width: 50%;
+			padding: .3em;
+		}
 	</style>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
@@ -115,6 +124,9 @@
 			<div class="name"></div>
 			<div class="months"></div>
 		</div>
+	</template>
+	<template id="chanbutton">
+		<button class="channel"></button>
 	</template>
 </head>
 <body>
@@ -132,6 +144,10 @@
 		const channelContainer = document.querySelector('#header .channelContainer');
 		const sublist = document.querySelector('#sublist');
 		const subitemTemplate = document.querySelector('template#subitem');
+		const chanbuttonTemplate = document.querySelector('template#chanbutton');
+
+		let selectedChannel = null;
+		let lastUpdateTime = null;
 
 		const socket = io();
 		async function emit(message,...args) {
@@ -145,6 +161,10 @@
 			);
 		};
 
+		function formatName(name) {
+			return `#${name}`;
+		}
+
 		function getTime(date) {
 			return moment(date).format('HH:mm');
 		}
@@ -156,34 +176,64 @@
 		}
 
 		function addEntry(subEntry){
-			console.log('Adding sub:',subEntry);
-			let fragment = subitemTemplate.content.cloneNode(true);
-			fragment.querySelector('.time').textContent = getTime(subEntry.creation_date);
-			fragment.querySelector('.name').textContent = subEntry.user;
-			fragment.querySelector('.months').textContent = subEntry.months;
-			sublist.appendChild(fragment);
+			if (subEntry.channel == selectedChannel) {
+				console.log('Adding sub:',subEntry);
+				let fragment = subitemTemplate.content.cloneNode(true);
+				fragment.querySelector('.time').textContent = getTime(subEntry.creation_date);
+				fragment.querySelector('.name').textContent = subEntry.user;
+				fragment.querySelector('.months').textContent = subEntry.months;
+				sublist.appendChild(fragment);
+			} else {
+				console.warning('Ignoring wrong channel sub:',selectedChannel,subEntry);
+			}
 		}
 
-		let lastUpdateTime = null;
-		async function refresh() {
-			console.log('Refreshing data.',lastUpdateTime);
-			let result = await emit('refresh',lastUpdateTime);
-			let lastItem = last(result);
-			if (lastItem)
+		async function selectChannel(name) {
+			console.log('Selecting channel:',name);
+			sublist.innerHTML = '';
+			const hashedChan = formatName(name);
+			document.title = `${originalPageTitle} ${hashedChan}`;
+			channelContainer.textContent = hashedChan;
+			try {
+				await emit('channel:track',name);
+				selectedChannel = name;
+				console.log('Tracking channel:',name);
+				refresh(selectedChannel);
+			}
+			catch(err) {
+				console.log('Error tracking channel:',err);
+			}
+		}
+
+		async function refresh(channel) {
+			console.log('Refreshing data:',channel,lastUpdateTime);
+			try {
+				let result = await emit('refresh',channel,lastUpdateTime);
+				let lastItem = last(result);
+				if (lastItem)
 				lastUpdateTime = lastItem.creation_date;
-			result.forEach(addEntry);
+				result.forEach(addEntry);
+			} catch (err) {
+				console.error('Error refreshing:',err);
+			}
 		}
 
 		socket.on('connect',()=> {
 			console.log('Connected.');
-			refresh();
+			if (selectedChannel)
+				refresh(selectedChannel);
 		});
 
-		socket.on('channel',(chan)=> {
-			console.log('Tracking channel:',chan);
-			const hashedChan = `#${chan}`;
-			document.title = originalPageTitle+hashedChan;
-			channelContainer.textContent = hashedChan;
+		socket.on('channels',(list)=> {
+			console.log('Received channels:',list);
+
+			list.forEach((name) => {
+				let fragment = chanbuttonTemplate.content.cloneNode(true);
+				const button = fragment.querySelector('.channel')
+				button.textContent = formatName(name);
+				button.addEventListener('click',()=> selectChannel(name));
+				sublist.appendChild(fragment);
+			});
 		});
 
 		socket.on('newsub',(subdata)=> {
@@ -194,7 +244,8 @@
 
 		window.addEventListener('focus',()=>{
 			// in case phone sleeps or browser goes into background on mobile.
-			refresh();
+			if (selectedChannel)
+				refresh(selectedChannel);
 		})
 	</script>
 </body>

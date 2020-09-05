@@ -6,7 +6,13 @@ _ = require 'lodash'
 log = require('log4js').getLogger('socket')
 debug = require('debug')('subtracker:socket')
 
-module.exports = (server,db,channelName)->
+filterChannelNames = (list)->
+	for chan in list
+		chan.replace /^#/,''
+
+module.exports = (server,db,channelList)->
+	channelList = filterChannelNames channelList
+	debug 'Using channel list:',channelList
 
 	io = Socket server,
 		pingTimeout: 5000
@@ -29,16 +35,28 @@ module.exports = (server,db,channelName)->
 					result = await generator(args...)
 					callback null,result
 				catch err
+					debug 'Service error:',name,err
 					callback err
 
-		registerService 'refresh', (refDate,callback)->
-			debug 'Refreshing since:',refDate
-			result = await db.listSubs channelName,refDate
+		registerService 'channel:track', (name)->
+			unless channelList.includes name
+				throw new Error 'INVALID_CHANNEL'
+
+			for chan in channelList
+				socket.leave chan
+
+			socket.join name
+			null
+
+		registerService 'refresh', (channel,refDate)->
+			debug 'Refreshing:',channel,refDate
+			result = await db.listSubs channel,refDate
 			# debug 'Found rows:',result
 			result
 
-		socket.emit 'channel',channelName
+		socket.emit 'channels',channelList
 
 	result =
 		notifyNewSub: (subdata)->
-			io.sockets.emit 'newsub',subdata
+			debug 'Notifying sub:',subdata
+			io.sockets.to(subdata.channel).emit 'newsub',subdata
