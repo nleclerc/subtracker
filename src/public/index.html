@@ -115,6 +115,10 @@
 			width: 50%;
 			padding: .3em;
 		}
+
+		.hidden {
+			display: none !important;
+		}
 	</style>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
@@ -134,7 +138,7 @@
 	<div id="header">
 		<div class="title">Subtracker</div>&nbsp;
 		<div class="channelContainer"></div>
-		<a class="downloadLink" href="downloadcsv" target="_blank"><img src="download-white.svg"></a>
+		<a class="downloadLink hidden" target="_blank"><img src="download-white.svg"></a>
 	</div>
 
 	<div id="sublist">
@@ -146,6 +150,8 @@
 		const sublist = document.querySelector('#sublist');
 		const subitemTemplate = document.querySelector('template#subitem');
 		const chanbuttonTemplate = document.querySelector('template#chanbutton');
+		const downloadLink = document.querySelector('.downloadLink');
+		const DOWNLOAD_URL = 'downloadcsv/';
 
 		let selectedChannel = null;
 		let lastUpdateTime = null;
@@ -181,6 +187,8 @@
 				await emit('channel:track',name);
 				selectedChannel = name;
 				console.log('Tracking channel:',name);
+				downloadLink.href = DOWNLOAD_URL+name;
+				downloadLink.classList.remove('hidden');
 				refresh(selectedChannel);
 			}
 			catch(err) {

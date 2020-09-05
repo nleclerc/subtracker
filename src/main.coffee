@@ -98,9 +98,10 @@ createSubData = (chan,username,type,months)->
 		app.use Express.static(publicFolderPath)
 		debug 'Serving files from:',publicFolderPath
 
-		app.get '/downloadcsv', (req,res)->
-			debug 'Processing CSV request.'
-			subs = await db.listSubs(config.channel)
+		app.get '/downloadcsv/:channel', (req,res)->
+			channel = req.params.channel
+			debug 'Processing CSV request:',channel
+			subs = await db.listSubs(channel)
 			debug 'Subs found:',subs.length
 
 			csvData = [CSV_HEADERS]
@@ -119,7 +120,7 @@ createSubData = (chan,username,type,months)->
 					log.error 'Error generating CSV:',err
 					res.status(500).end()
 				else
-					res.attachment("#{Moment().format('YYYY-MM-DD_HH-mm-ss')}-subs_#{config.channel}.csv").send(output).end()
+					res.attachment("#{Moment().format('YYYY-MM-DD_HH-mm-ss')}-subs_#{channel}.csv").send(output).end()
 
 		server = http.createServer(app)
 
