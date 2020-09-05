@@ -175,6 +175,18 @@
 			return null;
 		}
 
+		async function trackChannel(name){
+			try {
+				await emit('channel:track',name);
+				selectedChannel = name;
+				console.log('Tracking channel:',name);
+				refresh(selectedChannel);
+			}
+			catch(err) {
+				console.log('Error tracking channel:',err);
+			}
+		}
+
 		function addEntry(subEntry){
 			if (subEntry.channel == selectedChannel) {
 				console.log('Adding sub:',subEntry);
@@ -191,18 +203,11 @@
 		async function selectChannel(name) {
 			console.log('Selecting channel:',name);
 			sublist.innerHTML = '';
+			lastUpdateTime = null;
 			const hashedChan = formatName(name);
 			document.title = `${originalPageTitle} ${hashedChan}`;
 			channelContainer.textContent = hashedChan;
-			try {
-				await emit('channel:track',name);
-				selectedChannel = name;
-				console.log('Tracking channel:',name);
-				refresh(selectedChannel);
-			}
-			catch(err) {
-				console.log('Error tracking channel:',err);
-			}
+			await trackChannel(name);
 		}
 
 		async function refresh(channel) {
@@ -218,22 +223,28 @@
 			}
 		}
 
-		socket.on('connect',()=> {
+		socket.on('connect',async ()=> {
 			console.log('Connected.');
-			if (selectedChannel)
-				refresh(selectedChannel);
+			if (selectedChannel) {
+				await trackChannel(selectedChannel);
+				await refresh(selectedChannel);
+			}
 		});
 
 		socket.on('channels',(list)=> {
-			console.log('Received channels:',list);
+			if (!selectedChannel) {
+				console.log('Received channels:',list);
 
-			list.forEach((name) => {
-				let fragment = chanbuttonTemplate.content.cloneNode(true);
-				const button = fragment.querySelector('.channel')
-				button.textContent = formatName(name);
-				button.addEventListener('click',()=> selectChannel(name));
-				sublist.appendChild(fragment);
-			});
+				list.forEach((name) => {
+					let fragment = chanbuttonTemplate.content.cloneNode(true);
+					const button = fragment.querySelector('.channel')
+					button.textContent = formatName(name);
+					button.addEventListener('click',()=> selectChannel(name));
+					sublist.appendChild(fragment);
+				});
+			} else {
+				console.log('Ignoring channel list.');
+			}
 		});
 
 		socket.on('newsub',(subdata)=> {
@@ -242,10 +253,10 @@
 			addEntry(subdata);
 		});
 
-		window.addEventListener('focus',()=>{
+		window.addEventListener('focus',async ()=>{
 			// in case phone sleeps or browser goes into background on mobile.
 			if (selectedChannel)
-				refresh(selectedChannel);
+				await refresh(selectedChannel);
 		})
 	</script>
 </body>
