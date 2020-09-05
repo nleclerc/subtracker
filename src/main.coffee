@@ -39,7 +39,7 @@ createSubData = (chan,username,type,months)->
 	try
 		db = await require('./db')(config)
 
-		cron.schedule '*/10 * * * *', ->
+		cron.schedule '0 * * * *', ->
 			refDate = new Date(Date.now() - config.maxAge)
 			log.debug 'Cleaning up subs older than:',refDate
 			db.cleanupSubs refDate
